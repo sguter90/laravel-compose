@@ -1,0 +1,62 @@
+version: "3.1"
+
+services:
+
+  # laravel application
+  app:
+    build:  ./docker/app
+    environment:
+      MAIL_DRIVER: smtp
+      MAIL_HOST: mail
+      MAIL_PORT: 1025
+      MAIL_USERNAME: null
+      MAIL_PASSWORD: null
+      MAIL_ENCRYPTION: null
+
+  # fake mail server
+  mail:
+    image: schickling/mailcatcher
+    ports:
+      - 1025:1025 # smtp
+      - 1080:1080 # gui
+
+  # selenium grid
+  hub:
+    image: elgalu/selenium:3.9.1
+    ports:
+      - 4444:4444
+    volumes:
+      - /dev/shm:/dev/shm
+    privileged: true
+    environment:
+      - SELENIUM_HUB_HOST=hub
+      - SELENIUM_HUB_PORT=4444
+      - GRID=true
+      - CHROME=false
+      - FIREFOX=false
+
+  # selenium chrome
+  chrome:
+    image: elgalu/selenium:3.9.1
+    depends_on:
+      - hub
+    ports:
+      # VNC: See what's going on by connecting your VNC client to 0.0.0.0:5900
+      - 5900:25900
+      # noVNC: See what's going on by hitting http://0.0.0.0:6080 in your browser
+      #        Important: http://127.0.0.1:6080 works but http://localhost:6080 doesn't
+      - 6080:26080
+    volumes:
+      - /dev/shm:/dev/shm
+    privileged: true
+    environment:
+      - NOVNC=true
+      - SELENIUM_HUB_HOST=hub
+      - SELENIUM_HUB_PORT=4444
+      - SELENIUM_NODE_HOST={{CONTAINER_IP}}
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1080
+      - VIDEO=false
+      - GRID=false
+      - CHROME=true
+      - FIREFOX=false

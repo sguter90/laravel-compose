@@ -1,0 +1,8 @@
+.idea/
+
+.env
+
+services/*
+docker-compose.override.yml
+
+!.gitkeep
